@@ -151,10 +151,13 @@ class SelectorCV(ModelSelector):
                 break
             split_method = KFold(3, shuffle=False,random_state=self.random_state)
             for cv_train_index, cv_test_index in split_method.split(self.sequences):
-                X_train, X_train_lengths = combine_sequences(cv_train_index, self.sequences)
-                X_test, X_test_lengths = combine_sequences(cv_test_index, self.sequences)
-                model = self.base_model(n_states).fit(X_train, X_train_lengths)
-                scores.append(model.score(X_test, X_test_lengths))
+                try:
+                    X_train, X_train_lengths = combine_sequences(cv_train_index, self.sequences)
+                    X_test, X_test_lengths = combine_sequences(cv_test_index, self.sequences)
+                    model = self.base_model(n_states).fit(X_train, X_train_lengths)
+                    scores.append(model.score(X_test, X_test_lengths))
+                except:
+                    continue
             if(len(scores)>0):
                 avg_score = np.average(scores)
             if(avg_score > model_score):

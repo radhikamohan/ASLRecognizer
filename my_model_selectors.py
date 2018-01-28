@@ -78,12 +78,12 @@ class SelectorBIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         selected_model = self.base_model(self.n_constant)
         model_score = float('inf')
-        for no_of_comps in range(self.min_n_components, self.max_n_components+1):
+        for n_states in range(self.min_n_components, self.max_n_components+1):
             try:
-                best_model = self.base_model(no_of_comps)
+                best_model = self.base_model(n_states)
                 logL = best_model.score(self.X, self.lengths)
                 no_of_features = self.X.shape[1]
-                p = (no_of_comps * no_of_comps-1) + 2 * no_of_features * no_of_comps
+                p = (n_states * n_states-1) + 2 * no_of_features * n_states
                 logN = np.log(self.X.shape[0])
                 bic = -2 * logL + p * logN
                 if bic < model_score:

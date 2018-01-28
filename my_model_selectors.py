@@ -107,33 +107,23 @@ class SelectorDIC(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         selected_model = None
-        model_score = 0
-        #list of tuples, 0 - # of components, 1 - word, 2 - score, 3 - model
-        comp_model_score= []
-        for n_states in range(self.min_n_components, self.max_n_components+1):    
-            for w in self.words.keys():
-                try:
-                    w_X, w_lengths = self.hwords[w]
-                    comp_model = self.base_model(n_states)
-                    comp_score = comp_model.score(w_X,w_lengths)
-                    comp_model_score.append((n_states,w,comp_score,comp_model)) 
-                except:
-                    continue    
+        model_score = float('-inf')
         for n_states in range(self.min_n_components, self.max_n_components+1):
-                same_comp_tuples = [t for t in comp_model_score if t[0] == n_states]
-                this_word_tuple_list = [t for t in same_comp_tuples if t[1] == self.this_word]
-                if(len(this_word_tuple_list)>0):
-                    this_word_tuple = this_word_tuple_list[0]
-                    this_word_score = this_word_tuple[2]
-                    avg_other_words_score = np.average([w[0] for w in same_comp_tuples if w[1] != self.this_word])
-                    dic = this_word_score - avg_other_words_score
-                    if dic > model_score:
-                        dic = model_score
-                        selected_model = this_word_tuple[3]
+            try:
+                model = self.base_model(n_states)
+                logL = model.score(self.hwords[self.this_word])
+                p = np.mean([model.score(self.hwords[word]) for word in self.words if word != self.this_word ])
+                dic = logL - p
+                if dic > model_score:
+                    model_score = dic
+                    selected_model = model
+            except:
+                continue
         if selected_model is None:
             return self.base_model(self.n_constant)
         else:
             return selected_model
+
   
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds

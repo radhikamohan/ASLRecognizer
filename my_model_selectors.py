@@ -89,7 +89,8 @@ class SelectorBIC(ModelSelector):
                 if bic < model_score:
                     model_score = bic
                     selected_model = best_model
-            except:
+            except Exception as e:
+                print("Received {0} for {1} states".format(str(e), n_states))
                 continue
         return selected_model 
 
@@ -111,13 +112,14 @@ class SelectorDIC(ModelSelector):
         for n_states in range(self.min_n_components, self.max_n_components+1):
             try:
                 model = self.base_model(n_states)
-                logL = model.score(self.hwords[self.this_word])
-                p = np.mean([model.score(self.hwords[word]) for word in self.words if word != self.this_word ])
+                logL = model.score(*self.hwords[self.this_word])
+                p = np.mean( [ model.score(*self.hwords[word]) for word in self.words if word != self.this_word ] )
                 dic = logL - p
                 if dic > model_score:
                     model_score = dic
                     selected_model = model
-            except:
+            except Exception as e:
+                print("Received {0} for {1} states".format(str(e), n_states))
                 continue
         if selected_model is None:
             return self.base_model(self.n_constant)
@@ -146,8 +148,8 @@ class SelectorCV(ModelSelector):
                     X_test, X_test_lengths = combine_sequences(cv_test_index, self.sequences)
                     model = self.base_model(n_states).fit(X_train, X_train_lengths)
                     scores.append(model.score(X_test, X_test_lengths))
-                except:
-                    continue
+                except Exception as e:
+                    print("Received {0} for {1} states".format(str(e), n_states))
             if(len(scores)>0):
                 avg_score = np.average(scores)
             if(avg_score > model_score):
